@@ -43,9 +43,10 @@ object DauApp {
     // 注意：这里我们从 Kafka 中读取数据之后，直接就获取了偏移量的位置，因为 KafkaRDD 可以转换为
     //HasOffsetRanges，会自动记录位置
     var offsetRanges:Array[OffsetRange] = Array.empty[OffsetRange]
-    //TODO:transform的使用方法?
+    //transform的使用方法?
     val offsetDStream: DStream[ConsumerRecord[String, String]] = recordDStream.transform {
       rdd => {
+        //此处的代码在driver执行,所以能直接给offsetRanges赋值, 不用序列化操作
         offsetRanges = rdd.asInstanceOf[HasOffsetRanges].offsetRanges
         println(offsetRanges(0).untilOffset + "***********")
         rdd
