@@ -1,0 +1,33 @@
+phoenix:
+```
+创建省份表
+create table gmall2020_province_info (id varchar primary key,info.name
+varchar,info.area_code varchar,info.iso_code varchar)SALT_BUCKETS = 3;
+```
+
+```
+创建用户表
+create table gmall2020_user_info (id varchar primary key ,user_level varchar, birthday varchar,
+gender varchar, age_group varchar , gender_name varchar)SALT_BUCKETS = 3;
+```
+
+## 利用 maxwell-bootstrap 初始化数据
+```
+➢ --user maxwell
+数据库分配的操作 maxwell 数据库的用户名
+➢ --password 123456
+数据库分配的操作 maxwell 数据库的密码
+➢ --host
+数据库主机名
+➢ --database
+数据库名
+➢ --table
+表名
+➢ --client_id
+maxwell-bootstrap 不具备将数据直接导入 kafka或者 hbase 的能力，通过--client_id
+指定将数据交给哪个 maxwell 进程处理，在 maxwell 的 conf.properties 中配置
+```
+初始化省份表
+bin/maxwell-bootstrap --user maxwell --password 123456 --host hadoop102 --database gmall2020 --table base_province --client_id maxwell_1
+初始化用户表
+bin/maxwell-bootstrap --user maxwell --password 123456 --host hadoop102 --database gmall2020 --table user_info --client_id maxwell_1

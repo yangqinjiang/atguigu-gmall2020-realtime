@@ -5,6 +5,7 @@ import com.atguigu.gmall.realtime.utils.{MyKafkaSink, MyKafkaUtil, OffsetManager
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.apache.kafka.common.TopicPartition
 import org.apache.spark.SparkConf
+import org.apache.spark.rdd.RDD
 import org.apache.spark.streaming.dstream.{DStream, InputDStream}
 import org.apache.spark.streaming.kafka010.{HasOffsetRanges, OffsetRange}
 import org.apache.spark.streaming.{Seconds, StreamingContext}
@@ -51,23 +52,24 @@ object BaseDBMaxwellApp {
     //从json对象中获取table和data, 发送到不同的kafka主题
     //foreachRDD是行动算子
     val res: Unit = jsonObjDStream.foreachRDD {
-      rdd => {
+      rdd: RDD[JSONObject] => {
         rdd.foreach {
-          jsonObj => {
+          jsonObj: JSONObject => {
             val opType: String = jsonObj.getString("type")
             //获取当前对表数据的更新
             val dataJsonObj: JSONObject = jsonObj.getJSONObject("data")
-//            import scala.collection.JavaConverters._
+            //获取更新的表名
+            val tableName: String = jsonObj.getString("table")
+            //            import scala.collection.JavaConverters._
             //比较字符串, 统一使用大写的字符 toUpperCase
-            if (dataJsonObj != null && !dataJsonObj.isEmpty
-              && !"DELETE".equals(opType.toUpperCase())) {
-              //获取更新的表名
-              val tableName: String = jsonObj.getString("table")
-              //拼接发送的主题,ods 原始数据层
-              val sendTopic = "ods_" + tableName
-              //向kafka发送信息
-              MyKafkaSink.send(sendTopic, dataJsonObj.toString) //注意,不要向 val topic = "gmall2020_db_c" 发送
-
+            if (dataJsonObj != null && !dataJsonObj.isEmpty && tableName != null && opType != null) {
+              //只考虑需要的数据表
+              if (tableAndOp(opType, tableName)) {
+                //拼接发送的主题,ods 原始数据层
+                val sendTopic = "ods_" + tableName
+                //向kafka发送信息
+                MyKafkaSink.send(sendTopic, dataJsonObj.toString) //注意,不要向 val topic = "gmall2020_db_c" 发送
+              }
             }
           }
         }
@@ -79,5 +81,17 @@ object BaseDBMaxwellApp {
     //启动
     ssc.start()
     ssc.awaitTermination()
+  }
+  //只考虑需要的数据表
+  private def tableAndOp(opType: String, tableName: String):Boolean = {
+    if(("order_info".equals(tableName) && "insert".equals(opType)) // 订单表,新增数据insert
+    ||("order_detail".equals(tableName) && "insert".equals(opType)) //订单明细表,新增数据insert
+    || "base_province".equals(tableName) /* 省份表,insert,update等等*/
+    || "user_info".equals(tableName) /* 用户表,insert,update等等*/
+    || "sku_info".equals(tableName) /* sku表,insert,update等等*/
+    || "base_trademark".equals(tableName) /* base_trademark表,insert,update等等*/
+    || "base_category3".equals(tableName) /* base_category3表,insert,update等等*/
+    || "spu_info".equals(tableName) /* spu_info表,insert,update等等*/
+    ) true else false
   }
 }
