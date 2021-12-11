@@ -31,3 +31,79 @@ maxwell-bootstrap 不具备将数据直接导入 kafka或者 hbase 的能力，�
 bin/maxwell-bootstrap --user maxwell --password 123456 --host hadoop102 --database gmall2020 --table base_province --client_id maxwell_1
 初始化用户表
 bin/maxwell-bootstrap --user maxwell --password 123456 --host hadoop102 --database gmall2020 --table user_info --client_id maxwell_1
+
+
+
+```
+es索引模板
+PUT _template/gmall2020_order_info_template
+{
+"index_patterns": ["gmall2020_order_info*"],
+"settings": {
+"number_of_shards": 3
+},
+"aliases" : {
+"{index}-query": {},
+"gmall2020_order_info-query":{}
+},
+"mappings": {
+"_doc":{
+"properties":{
+"id":{
+"type":"long"
+},
+"province_id":{
+"type":"long"
+},
+"order_status":{
+"type":"keyword"
+},
+"user_id":{
+"type":"long"
+},
+"final_total_amount":{
+"type":"double"
+},
+"benefit_reduce_amount":{
+"type":"double"
+},
+"original_total_amount":{
+"type":"double"
+},
+"feight_fee":{
+"type":"double"
+},
+"expire_time":{
+"type":"keyword"
+},
+"create_time":{
+"type":"keyword"
+},
+"create_date":{
+"type":"date"
+},
+"create_hour":{
+"type":"keyword"
+},
+"if_first_order":{
+"type":"keyword"
+},
+"province_name":{
+"type":"keyword"
+},
+"province_area_code":{
+"type":"keyword"
+},
+"province_iso_code":{
+"type":"keyword"
+},
+"user_age_group":{
+"type":"keyword"
+},
+"user_gender":{
+"type":"keyword"
+}
+}
+}
+}
+```

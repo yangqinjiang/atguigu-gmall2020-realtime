@@ -14,7 +14,7 @@ import org.apache.spark.streaming.{Seconds, StreamingContext}
 object BaseDBMaxwellApp {
 
   def main(args: Array[String]): Unit = {
-    var sparkConf = new SparkConf().setMaster("local[4]").setAppName("BaseDBMaxwellApp").set("spark.testing.memory", "2147480000")
+    var sparkConf = new SparkConf().setMaster("local[3]").setAppName("BaseDBMaxwellApp").set("spark.testing.memory", "2147480000")
     val ssc = new StreamingContext(sparkConf, Seconds(5))
 
     val topic = "gmall2020_db_m"
