@@ -16,7 +16,7 @@ object PhoenixUtil {
     val resultList: ListBuffer[JSONObject] = new ListBuffer[JSONObject]()
     val conn: Connection = DriverManager.getConnection("jdbc:phoenix:hadoop102,hadoop103,hadoop104:2181")
     val stat: Statement = conn.createStatement()
-    println(sql)
+//    println(sql)
     val rs: ResultSet = stat.executeQuery(sql)
     val md: ResultSetMetaData = rs.getMetaData // 元数据
     while (rs.next()) { //迭代

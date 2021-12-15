@@ -1,8 +1,9 @@
 package com.atguigu.gmall.realtime.dwd
 
+import com.alibaba.fastjson.serializer.SerializeConfig
 import com.alibaba.fastjson.{JSON, JSONObject}
 import com.atguigu.gmall.realtime.bean.{OrderInfo, ProvinceInfo, UserStatus}
-import com.atguigu.gmall.realtime.utils.{MyKafkaUtil, OffsetManagerUtil, PhoenixUtil}
+import com.atguigu.gmall.realtime.utils.{MyESUtil, MyKafkaSink, MyKafkaUtil, OffsetManagerUtil, PhoenixUtil}
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.apache.kafka.common.TopicPartition
 import org.apache.spark.SparkConf
@@ -11,6 +12,9 @@ import org.apache.spark.rdd.RDD
 import org.apache.spark.streaming.dstream.{DStream, InputDStream}
 import org.apache.spark.streaming.kafka010.{HasOffsetRanges, OffsetRange}
 import org.apache.spark.streaming.{Seconds, StreamingContext}
+
+import java.text.SimpleDateFormat
+import java.util.Date
 
 /**
  * 判断是否为首单用户实现
@@ -291,10 +295,18 @@ object OrderInfoApp {
         //--------------3.2 将订单信息写入到 ES 中-----------------
         rdd.foreachPartition {
           orderInfoItr =>{
+            //======下面将订单信息写入到ES, kafka的dwd层==========
             val orderInfoList: List[(String,OrderInfo)] =
               orderInfoItr.toList.map(orderInfo => (orderInfo.id.toString,orderInfo))
             val dateStr: String = new SimpleDateFormat("yyyyMMdd").format(new Date())
             MyESUtil.bulkInsert(orderInfoList, "gmall2020_order_info_" + dateStr)
+
+            //3.2 将订单信息推回 kafka 进入下一层处理 主题： dwd_order_info
+            for ((id,orderInfo) <- orderInfoList) {
+              //fastjson 要把 scala 对象包括 caseclass 转 json 字符串 需要加入,new SerializeConfig(true)
+              MyKafkaSink.send("dwd_order_info",
+                JSON.toJSONString(orderInfo,new SerializeConfig(true)))
+            }
           }
         }
 

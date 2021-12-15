@@ -1,9 +1,8 @@
 package com.atguigu.gmall.realtime.utils
 
-import com.atguigu.gmall.realtime.bean.DauInfo
 import io.searchbox.client.config.HttpClientConfig
 import io.searchbox.client.{JestClient, JestClientFactory}
-import io.searchbox.core.{Bulk, BulkResult, DocumentResult, Get, Index, Search, SearchResult}
+import io.searchbox.core._
 import org.elasticsearch.index.query.{BoolQueryBuilder, MatchQueryBuilder, TermQueryBuilder}
 import org.elasticsearch.search.builder.SearchSourceBuilder
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder
@@ -183,7 +182,7 @@ object MyESUtil {
   case class Movie(id: String, movie_name: String, actorNameList: java.util.List[String]) {}
 
   //向ES中批量插入数据
-  def bulkInsert(sourceList:List[(String,DauInfo)],indexName:String):Unit = {
+  def bulkInsert(sourceList:List[(String,Any)],indexName:String):Unit = {
     if(sourceList!=null && sourceList.nonEmpty){
       //获取操作对象
       var jest = getClient//构造批次操作
