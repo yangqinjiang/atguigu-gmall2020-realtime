@@ -26,14 +26,15 @@ object OrderWideApp {
     val ssc: StreamingContext = new StreamingContext(sparkConf, Seconds(5))
     //两个流的kafka主题名称,消费组名
     //订单
-    val orderInfoTopic = "dws_order_info"
-    val orderInfoGroupId = "dws_order_info_group"
+    val orderInfoTopic = "dwd_order_info"//dwd_order_info
+    val orderInfoGroupId = "dwd_order_info_group"
     //订单明细
-    val orderDetailTopic = "dws_order_detail"
-    val orderDetailGroupId = "dws_order_detail_group"
+    val orderDetailTopic = "dwd_order_detail"//dwd_order_detail
+    val orderDetailGroupId = "dwd_order_detail_group"
 
     //从redis中读取 偏移量(这是启动时执行一次)
     val orderInfoOffsetMapForKafka: Map[TopicPartition, Long] = OffsetManagerUtil.getOffset(orderInfoTopic, orderInfoGroupId)
+
     val orderDetailOffsetMapForKafka: Map[TopicPartition, Long] = OffsetManagerUtil.getOffset(orderDetailTopic, orderDetailGroupId)
 
     //根据订单偏移量, 从kafka中获取订单数据
@@ -145,7 +146,7 @@ object OrderWideApp {
         val jedis: Jedis = MyRedisUtil.getJedisClient
         //临时集合
         val orderWideList: List[OrderWide] = orderWideItr.toList
-        println("分区orderIds:" + orderWideList.map(_.order_id).mkString(","))
+//        println("分区orderIds:" + orderWideList.map(_.order_id).mkString(","))
         for (orderWide <- orderWideList) {
 
           //从Redis中获取原始金额累计
