@@ -1,18 +1,19 @@
 package com.atguigu.gmall.realtime.dws
 
 import com.alibaba.fastjson.JSON
-import com.alibaba.fastjson.serializer.SerializeConfig
 import com.atguigu.gmall.realtime.bean.{OrderDetail, OrderInfo, OrderWide}
 import com.atguigu.gmall.realtime.utils.{MyKafkaUtil, MyRedisUtil, OffsetManagerUtil}
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.apache.kafka.common.TopicPartition
 import org.apache.spark.SparkConf
+import org.apache.spark.sql.{DataFrame, SaveMode, SparkSession}
 import org.apache.spark.streaming.dstream.{DStream, InputDStream}
 import org.apache.spark.streaming.kafka010.{HasOffsetRanges, OffsetRange}
 import org.apache.spark.streaming.{Seconds, StreamingContext}
 import redis.clients.jedis.Jedis
 
 import java.lang
+import java.util.Properties
 import scala.collection.mutable.ListBuffer
 
 /**
@@ -26,10 +27,10 @@ object OrderWideApp {
     val ssc: StreamingContext = new StreamingContext(sparkConf, Seconds(5))
     //两个流的kafka主题名称,消费组名
     //订单
-    val orderInfoTopic = "dwd_order_info"//dwd_order_info
+    val orderInfoTopic = "dwd_order_info" //dwd_order_info
     val orderInfoGroupId = "dwd_order_info_group"
     //订单明细
-    val orderDetailTopic = "dwd_order_detail"//dwd_order_detail
+    val orderDetailTopic = "dwd_order_detail" //dwd_order_detail
     val orderDetailGroupId = "dwd_order_detail_group"
 
     //从redis中读取 偏移量(这是启动时执行一次)
@@ -136,7 +137,7 @@ object OrderWideApp {
         orderWideList.toIterator
       }
     }
-//    orderWideDStream.print(1000)
+    //    orderWideDStream.print(1000)
 
     // ------------实付分摊计算--------------
 
@@ -146,7 +147,7 @@ object OrderWideApp {
         val jedis: Jedis = MyRedisUtil.getJedisClient
         //临时集合
         val orderWideList: List[OrderWide] = orderWideItr.toList
-//        println("分区orderIds:" + orderWideList.map(_.order_id).mkString(","))
+        //        println("分区orderIds:" + orderWideList.map(_.order_id).mkString(","))
         for (orderWide <- orderWideList) {
 
           //从Redis中获取原始金额累计
@@ -206,11 +207,28 @@ object OrderWideApp {
     }
 
     //测试输出到控制台
-    orderWideWithSplitDStream.map {
-      orderWide => JSON.toJSONString(orderWide, new SerializeConfig(true))
-    }.print(1000)
+    //    orderWideWithSplitDStream.map {
+    //      orderWide => JSON.toJSONString(orderWide, new SerializeConfig(true))
+    //    }.print(1000)
+    //注意 cache流的数据
     //输出到clickHouse
+    val sparkSession: SparkSession = SparkSession.builder().appName("order_detail_wide_spark_app").getOrCreate()
+    import sparkSession.implicits._
+    orderWideWithSplitDStream.foreachRDD {
+      rdd => {
+        val df: DataFrame = rdd.toDF()
+        df.write.mode(SaveMode.Append)
+          .option("batchsize", "100")
+          .option("isolationLevel", "NONE") //设置事务
+          .option("numPartitions", "4") //设置并发
+          .option("driver", "ru.yandex.clickhouse.ClickHouseDriver")
+          .jdbc("jdbc:clickhouse://hadoop202:8123/default", "t_order_wide_2020", new Properties())
 
+        //提交两个流的偏移量
+        OffsetManagerUtil.saveOffset(orderInfoTopic, orderInfoGroupId, orderInfoOffsetRanges)
+        OffsetManagerUtil.saveOffset(orderDetailTopic, orderDetailGroupId, orderDetailOffsetRanges)
+      }
+    }
     ssc.start()
     ssc.awaitTermination()
   }
