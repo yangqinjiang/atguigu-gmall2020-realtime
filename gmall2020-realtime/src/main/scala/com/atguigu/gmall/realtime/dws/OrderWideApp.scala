@@ -3,7 +3,7 @@ package com.atguigu.gmall.realtime.dws
 import com.alibaba.fastjson.JSON
 import com.alibaba.fastjson.serializer.SerializeConfig
 import com.atguigu.gmall.realtime.bean.{OrderDetail, OrderInfo, OrderWide}
-import com.atguigu.gmall.realtime.utils.{MyKafkaUtil, MyRedisUtil, OffsetManagerUtil}
+import com.atguigu.gmall.realtime.utils.{MyKafkaSink, MyKafkaUtil, MyRedisUtil, OffsetManagerUtil}
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.apache.kafka.common.TopicPartition
 import org.apache.spark.SparkConf
@@ -207,17 +207,18 @@ object OrderWideApp {
       }
     }
 
-    orderWideWithSplitDStream.cache()
-    //测试输出到控制台
-    orderWideWithSplitDStream.map {
-      orderWide => JSON.toJSONString(orderWide, new SerializeConfig(true))
-    }.print(1000)
+//    orderWideWithSplitDStream.cache()
+//    //测试输出到控制台
+//    orderWideWithSplitDStream.map {
+//      orderWide => JSON.toJSONString(orderWide, new SerializeConfig(true))
+//    }.print(1000)
     //注意 cache流的数据
     //输出到clickHouse
     val sparkSession: SparkSession = SparkSession.builder().appName("order_detail_wide_spark_app").getOrCreate()
     import sparkSession.implicits._
     orderWideWithSplitDStream.foreachRDD {
       rdd => {
+        rdd.cache() //注意,因为下面多次action,需要缓存此rdd的数据
         val df: DataFrame = rdd.toDF()
         df.write.mode(SaveMode.Append)
           .option("batchsize", "100")
@@ -226,6 +227,10 @@ object OrderWideApp {
           .option("driver", "ru.yandex.clickhouse.ClickHouseDriver")
           .jdbc("jdbc:clickhouse://hadoop103:8123/default", "t_order_wide_2020", new Properties())
 
+        //将数据写回到 Kafka
+        rdd.foreach{orderWide=>
+          MyKafkaSink.send("dws_order_wide", JSON.toJSONString(orderWide,new SerializeConfig(true)))
+        }
         //提交两个流的偏移量
         OffsetManagerUtil.saveOffset(orderInfoTopic, orderInfoGroupId, orderInfoOffsetRanges)
         OffsetManagerUtil.saveOffset(orderDetailTopic, orderDetailGroupId, orderDetailOffsetRanges)
