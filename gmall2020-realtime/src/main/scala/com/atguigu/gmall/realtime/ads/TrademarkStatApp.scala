@@ -23,7 +23,7 @@ object TrademarkStatApp {
   def main(args: Array[String]): Unit = {
     // 加载流
     val sparkConf: SparkConf = new
-        SparkConf().setMaster("local[4]").setAppName("TrademarkStatApp")
+        SparkConf().setMaster("local[3]").setAppName("TrademarkStatApp").set("spark.testing.memory", "2147480000")
     val ssc = new StreamingContext(sparkConf, Seconds(5))
     val groupId = "ads_trademark_stat_group"
     val topic = "dws_order_wide";
@@ -31,7 +31,7 @@ object TrademarkStatApp {
     val offsetMapForKafka: Map[TopicPartition, Long] = OffsetManagerM.getOffset(topic, groupId)
     //把偏移量传递给 kafka ，加载数据流
     var recordInputDstream: InputDStream[ConsumerRecord[String, String]] = null
-    if (offsetMapForKafka != null && offsetMapForKafka.size > 0) { //根据是否能 取到偏移量来决定如何加载 kafka 流
+    if (offsetMapForKafka != null && offsetMapForKafka.nonEmpty) { //根据是否能 取到偏移量来决定如何加载 kafka 流
       recordInputDstream = MyKafkaUtil.getKafkaStream(topic, ssc, offsetMapForKafka, groupId)
     } else {
       recordInputDstream = MyKafkaUtil.getKafkaStream(topic, ssc, groupId)
@@ -64,7 +64,8 @@ object TrademarkStatApp {
       }
     val tradermarkSumDstream: DStream[(String, Double)] =
       trademarkAmountDstream.reduceByKey(_ + _)
-    tradermarkSumDstream.print(1000)
+//    tradermarkSumDstream.cache()
+//    tradermarkSumDstream.print(1000)
     //存储数据以及偏移量到 MySQL 中，为了保证精准消费 我们将使用事务对存储数据和修改偏移量进行控制
     //方式 1：单条插入
     /*
@@ -134,6 +135,7 @@ object TrademarkStatApp {
               for (offsetRange <- offsetRanges) {
                 val partitionId: Int = offsetRange.partition
                 val untilOffset: Long = offsetRange.untilOffset
+                println("保存分区: "+partitionId+":"+offsetRange.fromOffset+"---->"+offsetRange.untilOffset)
                 SQL("replace into offset_2020 values(?,?,?,?)").bind(groupId,
                   topic, partitionId, untilOffset).update().apply()
               }

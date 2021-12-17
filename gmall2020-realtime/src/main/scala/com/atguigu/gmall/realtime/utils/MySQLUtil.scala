@@ -23,7 +23,7 @@ object MySQLUtil {
       "root",
       "123456")
     val stat: Statement = conn.createStatement
-    println(sql)
+//    println(sql)
     val rs: ResultSet = stat.executeQuery(sql)
     val md: ResultSetMetaData = rs.getMetaData
     while (rs.next) {

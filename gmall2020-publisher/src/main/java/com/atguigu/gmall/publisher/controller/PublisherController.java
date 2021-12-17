@@ -75,6 +75,7 @@ public class PublisherController {
             hourMap.put("yesterday", dauHourYdMap);
             return hourMap;
         }else if("order_amount".equals(id)){
+            //TODO: springboot多数据源的问题
             Map<String, BigDecimal> orderAmountHourTD = clickHouseService.getOrderAmountHour(dt);
             String yd = getYd(dt);
             Map<String, BigDecimal> orderAmountHourYD = clickHouseService.getOrderAmountHour(yd);

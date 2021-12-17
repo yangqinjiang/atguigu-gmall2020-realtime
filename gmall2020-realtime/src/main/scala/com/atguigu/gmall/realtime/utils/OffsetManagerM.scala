@@ -23,6 +23,7 @@ object OffsetManagerM {
       jsonObj => {
         val topicPartition: TopicPartition = new TopicPartition(topic, jsonObj.getIntValue("partition_id"))
         val offset: Long = jsonObj.getLongValue("topic_offset")
+        println("读取分区偏移量: " + jsonObj.getIntValue("partition_id") + ":" + offset)
         (topicPartition, offset)
       }
     }
