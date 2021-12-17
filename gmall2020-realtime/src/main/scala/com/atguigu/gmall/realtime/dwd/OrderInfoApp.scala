@@ -272,8 +272,8 @@ object OrderInfoApp {
         orderInfoList.toIterator
       }
     }
-    orderInfoWithUserDStream.cache()
-    orderInfoWithUserDStream.print(1000)
+//    orderInfoWithUserDStream.cache()
+//    orderInfoWithUserDStream.print(1000)
     //==============3保存用户状态============
     import org.apache.phoenix.spark._
     orderInfoWithUserDStream.foreachRDD {
