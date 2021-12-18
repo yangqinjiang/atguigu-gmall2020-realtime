@@ -1,6 +1,7 @@
 package com.atguigu.gmall.realtime.utils
 
 import org.apache.kafka.common.TopicPartition
+import org.apache.spark.internal.Logging
 import org.apache.spark.streaming.kafka010.OffsetRange
 import redis.clients.jedis.Jedis
 
@@ -9,7 +10,7 @@ import java.util
 /**
  * 偏移量管理类，用于读取和保存偏移量
  */
-object OffsetManagerUtil {
+object OffsetManagerUtil  extends Logging{
   /**
    * 从 Redis 中读取偏移量
    * Reids 格式： type=>Hash [key=>offset:topic:groupId field=>partitionId
@@ -34,7 +35,7 @@ Map[TopicPartition,Long]
     import scala.collection.JavaConverters._
     val kafkaOffsetMap: Map[TopicPartition, Long] = offsetMap.asScala.map {
       case (partitionId, offset) => {
-        println("读取分区偏移量: " + partitionId + ":" + offset)
+        logWarning("读取分区偏移量: " + partitionId + ":" + offset)
         //将Redis中保存的分区对应的偏移量进行封装
         (new TopicPartition(topicName, partitionId.toInt), offset.toLong)
       }
@@ -62,9 +63,11 @@ Map[TopicPartition,Long]
       //封装到Map集合中
       offsetMap.put(partition.toString,untilOffset.toString)
       //打印测试
-      println("保存分区: "+partition+":"+offset.fromOffset+"---->"+offset.untilOffset)
-
+      if(offset.untilOffset > offset.fromOffset){
+        logWarning("保存分区: "+partition+":"+offset.fromOffset+"---->"+offset.untilOffset)
+      }
     }
+    logWarning("-------------")
     //拼接Redis中存储偏移量的key
     val offsetKey = "offset:" + topicName + ":" + groupId
 
