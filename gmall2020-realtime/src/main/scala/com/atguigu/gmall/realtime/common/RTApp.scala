@@ -59,6 +59,7 @@ trait RTApp extends Logging {
     ssc.start()
     //通过扫描监控文件，优雅的关闭停止StreamingContext流式应用
     // 设置参数spark.streaming.stopGracefullyOnShutdown为true，优雅的关闭
-    StreamingUtils.stopStreaming(ssc, "/gmall2020-realtime/stop/"+appName)
+    // 自动适应本地文件系统或者Hadoop的DFS系统,
+    StreamingUtils.stopStreaming(ssc, "gmall2020-realtime/datas/stop/"+appName)
   }
 }

@@ -47,9 +47,9 @@ object StreamingUtils {
       isStreamingStop = ssc.awaitTerminationOrTimeout(checkInterval)
 
       //TODO: 使用Redis保存这些状态
-      val isExists = false /*isExistsMonitorFile(
+      val isExists = isExistsMonitorFile(
         monitorFile, ssc.sparkContext.hadoopConfiguration
-      )*/
+      )
       if (!isStreamingStop && isExists) {
         ssc.stop(stopSparkContext = true, stopGracefully = true)
       }
@@ -74,9 +74,9 @@ object StreamingUtils {
     while (!isStreamingStop) {
       isStreamingStop = query.awaitTermination(checkInterval)
       //TODO: 使用Redis保存这些状态
-      val isExists = false /*isExistsMonitorFile(
+      val isExists =  isExistsMonitorFile(
         monitorFile, query.sparkSession.sparkContext.hadoopConfiguration
-      )*/
+      )
       if (!isStreamingStop && isExists) {
         query.stop() //停止查询
       }
