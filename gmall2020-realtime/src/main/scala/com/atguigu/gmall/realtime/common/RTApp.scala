@@ -1,6 +1,6 @@
 package com.atguigu.gmall.realtime.common
 
-import com.atguigu.gmall.realtime.utils.{MyKafkaUtil, OffsetManagerUtil}
+import com.atguigu.gmall.realtime.utils.{MyKafkaUtil, OffsetManagerUtil, StreamingUtils}
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.apache.kafka.common.TopicPartition
 import org.apache.spark.SparkConf
@@ -19,9 +19,10 @@ trait RTApp extends Logging {
             , groupId: String = "RTGroupId",
             batchDuration: Duration)(offsetDStreamOp: (DStream[ConsumerRecord[String, String]], String, String) => Unit): Unit = {
 
-    logWarning(this.getClass.getSimpleName + "开始运行了~~")
+    val appName = this.getClass.getSimpleName.stripSuffix("$")
+    logWarning( appName + "开始运行了~~")
     val sparkConf: SparkConf = new SparkConf().setMaster(master)
-      .setAppName(this.getClass.getSimpleName).set("spark.testing.memory", "2147480000")
+      .setAppName(appName).set("spark.testing.memory", "2147480000")
     val ssc = new StreamingContext(sparkConf, batchDuration)
     //============消费kafka数据基本实现===================
 
@@ -53,9 +54,11 @@ trait RTApp extends Logging {
       case ex: Throwable => println(ex.getMessage)
     }
 
-    //TODO:配置优雅停机
+    //配置优雅停机
     //启动
     ssc.start()
-    ssc.awaitTermination()
+    //通过扫描监控文件，优雅的关闭停止StreamingContext流式应用
+    // 设置参数spark.streaming.stopGracefullyOnShutdown为true，优雅的关闭
+    StreamingUtils.stopStreaming(ssc, "/gmall2020-realtime/stop/"+appName)
   }
 }
