@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/dw-chart/dw-chart.iml" filepath="$PROJECT_DIR$/dw-chart/dw-chart.iml" />
+      <module fileurl="file://$PROJECT_DIR$/gmall2020-logger/gmall2020-logger.iml" filepath="$PROJECT_DIR$/gmall2020-logger/gmall2020-logger.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/gmall2020-parent.iml" filepath="$PROJECT_DIR$/.idea/gmall2020-parent.iml" />
+      <module fileurl="file://$PROJECT_DIR$/gmall2020-publisher/gmall2020-publisher.iml" filepath="$PROJECT_DIR$/gmall2020-publisher/gmall2020-publisher.iml" />
+      <module fileurl="file://$PROJECT_DIR$/gmall2020-realtime/gmall2020-realtime.iml" filepath="$PROJECT_DIR$/gmall2020-realtime/gmall2020-realtime.iml" />
+    </modules>
+  </component>
+</project>

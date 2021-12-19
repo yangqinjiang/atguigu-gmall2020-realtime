@@ -2,7 +2,7 @@ package com.atguigu.gmall.realtime.app
 
 import com.alibaba.fastjson.{JSON, JSONObject}
 import com.atguigu.gmall.realtime.bean.DauInfo
-import com.atguigu.gmall.realtime.common.RTApp
+import com.atguigu.gmall.realtime.common.{RTApp, StartConf}
 import com.atguigu.gmall.realtime.utils.{MyESUtil, MyRedisUtil, OffsetManagerUtil}
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.apache.spark.rdd.RDD
@@ -19,9 +19,10 @@ import scala.collection.mutable.ListBuffer
  * DailyActiveUser 日活用户统计业务类
  */
 object DauApp extends App with RTApp {
+  val conf = StartConf("local[3]",
+    "gmall_start_0523", "gmall_dau_group", Seconds(5))
   //启动应用程序
-  start("local[3]",
-    "gmall_start_0523", "gmall_dau_group", Seconds(5)) {
+  start(conf) {
     (offsetDStream: DStream[ConsumerRecord[String, String]],
      topic: String, groupId: String) => {
 
