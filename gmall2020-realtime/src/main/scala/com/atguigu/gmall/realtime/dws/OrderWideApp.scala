@@ -21,7 +21,7 @@ import scala.collection.mutable.ListBuffer
  * 订单和订单明细双流合并
  */
 object OrderWideApp {
-
+  //TODO: 代码优化,重用
   def main(args: Array[String]): Unit = {
     val sparkConf: SparkConf = new SparkConf().setMaster("local[4]")
       .setAppName("OrderWideApp").set("spark.testing.memory", "2147480000")
