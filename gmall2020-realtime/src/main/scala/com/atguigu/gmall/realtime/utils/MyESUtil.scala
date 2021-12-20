@@ -1,5 +1,6 @@
 package com.atguigu.gmall.realtime.utils
 
+import com.atguigu.gmall.realtime.config.ApplicationConfig
 import io.searchbox.client.config.HttpClientConfig
 import io.searchbox.client.{JestClient, JestClientFactory}
 import io.searchbox.core._
@@ -20,9 +21,9 @@ object MyESUtil {
   def build(): Unit = {
     factory = new JestClientFactory
     //构造者模式
-    factory.setHttpClientConfig(new HttpClientConfig.Builder("http://hadoop102:9200")
+    factory.setHttpClientConfig(new HttpClientConfig.Builder(ApplicationConfig.ES_NODES_PORT)
       .multiThreaded(true)
-      .maxTotalConnection(20)
+      .maxTotalConnection(ApplicationConfig.ES_MAX_TOTAL_CONNECTION)
       .connTimeout(10000)
       .readTimeout(1000)
       .build())

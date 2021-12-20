@@ -1,5 +1,6 @@
 package com.atguigu.gmall.realtime.utils
 
+import com.atguigu.gmall.realtime.config.ApplicationConfig
 import org.apache.kafka.clients.producer.{KafkaProducer, ProducerRecord}
 
 import java.util.Properties
@@ -9,9 +10,6 @@ import java.util.Properties
  */
 object MyKafkaSink {
 
-  //配置源文件
-  private val properties: Properties = MyPropertiesUtil.load("config.properties")
-  private val broker_list: String = properties.getProperty("kafka.broker.list")
   //kafka消息生产者
   var kafkaProducer: KafkaProducer[String, String] = null
 
@@ -19,7 +17,7 @@ object MyKafkaSink {
   def createKafkaProducer: KafkaProducer[String, String] = {
     //配置
     val properties = new Properties()
-    properties.put("bootstrap.servers", broker_list)
+    properties.put("bootstrap.servers", ApplicationConfig.KAFKA_BOOTSTRAP_SERVERS)
     properties.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer")
     properties.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer")
     //开启幂等性
@@ -35,15 +33,16 @@ object MyKafkaSink {
   }
 
   //发送消息
-  def send(topic:String,msg:String):Unit ={
+  def send(topic: String, msg: String): Unit = {
     //单例模式?
-    if(null == kafkaProducer)kafkaProducer=createKafkaProducer
-    kafkaProducer.send(new ProducerRecord[String,String](topic,msg))
+    if (null == kafkaProducer) kafkaProducer = createKafkaProducer
+    kafkaProducer.send(new ProducerRecord[String, String](topic, msg))
   }
+
   //发送消息,重载
-  def send(topic:String,key:String,msg:String):Unit ={
+  def send(topic: String, key: String, msg: String): Unit = {
     //单例模式?
-    if(null == kafkaProducer)kafkaProducer=createKafkaProducer
-    kafkaProducer.send(new ProducerRecord[String,String](topic,key,msg))
+    if (null == kafkaProducer) kafkaProducer = createKafkaProducer
+    kafkaProducer.send(new ProducerRecord[String, String](topic, key, msg))
   }
 }

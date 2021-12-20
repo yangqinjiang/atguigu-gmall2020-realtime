@@ -1,6 +1,7 @@
 package com.atguigu.gmall.realtime.utils
 
 import com.alibaba.fastjson.JSONObject
+import com.atguigu.gmall.realtime.config.ApplicationConfig
 
 import java.sql.{Connection, DriverManager, ResultSet, ResultSetMetaData, Statement}
 import scala.collection.mutable.ListBuffer
@@ -11,12 +12,12 @@ import scala.collection.mutable.ListBuffer
 object PhoenixUtil {
 
   def queryList(sql: String): List[JSONObject] = {
-    Class.forName("org.apache.phoenix.jdbc.PhoenixDriver")
+    Class.forName(ApplicationConfig.PHOENIX_DRIVER)
     //返回的结果集合
     val resultList: ListBuffer[JSONObject] = new ListBuffer[JSONObject]()
-    val conn: Connection = DriverManager.getConnection("jdbc:phoenix:hadoop102,hadoop103,hadoop104:2181")
+    val conn: Connection = DriverManager.getConnection(ApplicationConfig.PHOENIX_CONN)
     val stat: Statement = conn.createStatement()
-//    println(sql)
+    //    println(sql)
     val rs: ResultSet = stat.executeQuery(sql)
     val md: ResultSetMetaData = rs.getMetaData // 元数据
     while (rs.next()) { //迭代

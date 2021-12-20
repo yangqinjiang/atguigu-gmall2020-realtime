@@ -9,14 +9,14 @@ import org.apache.spark.streaming.Seconds
 import org.apache.spark.streaming.dstream.DStream
 
 //基于Maxwell从Kafka中读取业务数据, 进行分流
-object BaseDBMaxwellApp  extends App with RTApp {
+object BaseDBMaxwellApp extends App with RTApp {
   val conf = StartConf("local[3]",
     "gmall2020_db_m", "base_db_maxwell_group", Seconds(5))
 
   //启动应用程序
-  start(conf){
+  start(conf) {
     (offsetDStream: DStream[ConsumerRecord[String, String]],
-     topic: String, groupId: String) =>{
+     topic: String, groupId: String) => {
 
       //将从kafka中读取到的record数据进行封装为json对象
       val jsonObjDStream: DStream[JSONObject] = offsetDStream.map {
@@ -28,10 +28,11 @@ object BaseDBMaxwellApp  extends App with RTApp {
           jsonObject
         }
       }
+
       //只考虑需要的数据表
-      def tableAndOp(opType: String, tableName: String):Boolean = {
-        if(("order_info".equals(tableName) && "insert".equals(opType)) // 订单表,新增数据insert
-          ||("order_detail".equals(tableName) && "insert".equals(opType)) //订单明细表,新增数据insert
+      def tableAndOp(opType: String, tableName: String): Boolean = {
+        if (("order_info".equals(tableName) && "insert".equals(opType)) // 订单表,新增数据insert
+          || ("order_detail".equals(tableName) && "insert".equals(opType)) //订单明细表,新增数据insert
           || "base_province".equals(tableName) /* 省份表,insert,update等等*/
           || "user_info".equals(tableName) /* 用户表,insert,update等等*/
           || "sku_info".equals(tableName) /* sku表,insert,update等等*/
@@ -40,6 +41,7 @@ object BaseDBMaxwellApp  extends App with RTApp {
           || "spu_info".equals(tableName) /* spu_info表,insert,update等等*/
         ) true else false
       }
+
       //从json对象中获取table和data, 发送到不同的kafka主题
       //foreachRDD是行动算子
       val res: Unit = jsonObjDStream.foreachRDD {
