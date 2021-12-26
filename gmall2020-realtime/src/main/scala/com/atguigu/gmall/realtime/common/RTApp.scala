@@ -14,6 +14,16 @@ trait RTApp extends Logging {
   //属性, 因为offsetRanges在DStream.transform周期性被修改,所以要提取到类属性中
   protected var offsetRanges: Array[OffsetRange] = Array.empty[OffsetRange]
 
+  /**
+   * 获取kafka的消费偏移量
+   * @param topicName 主题
+   * @param groupId 消费者组
+   * @return
+   */
+  def getKafkaOffset(topicName:String,groupId:String):Map[TopicPartition,Long] = {
+    OffsetManagerUtil.getOffset(topicName, groupId)
+  }
+
   def start(conf:StartConf)(offsetDStreamOp: (DStream[ConsumerRecord[String, String]], String, String) => Unit): Unit = {
 
     val appName = this.getClass.getSimpleName.stripSuffix("$")
@@ -24,7 +34,7 @@ trait RTApp extends Logging {
     //============消费kafka数据基本实现===================
 
     //从Redis中读取kafka偏移量
-    val kafkaOffsetMap: Map[TopicPartition, Long] = OffsetManagerUtil.getOffset(conf.topic, conf.groupId)
+    val kafkaOffsetMap: Map[TopicPartition, Long] = getKafkaOffset(conf.topic, conf.groupId)
     var recordDStream: InputDStream[ConsumerRecord[String, String]] = null
     if (kafkaOffsetMap != null && kafkaOffsetMap.nonEmpty) {
       //Redis中有偏移量,根据Redis中保存的偏移量读取

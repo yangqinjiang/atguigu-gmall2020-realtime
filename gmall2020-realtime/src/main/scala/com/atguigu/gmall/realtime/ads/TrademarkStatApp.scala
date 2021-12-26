@@ -3,7 +3,9 @@ package com.atguigu.gmall.realtime.ads
 import com.alibaba.fastjson.JSON
 import com.atguigu.gmall.realtime.bean.OrderWide
 import com.atguigu.gmall.realtime.common.{RTApp, StartConf}
+import com.atguigu.gmall.realtime.utils.OffsetManagerM
 import org.apache.kafka.clients.consumer.ConsumerRecord
+import org.apache.kafka.common.TopicPartition
 import org.apache.spark.streaming.Seconds
 import org.apache.spark.streaming.dstream.DStream
 import scalikejdbc.config.DBs
@@ -20,6 +22,11 @@ object TrademarkStatApp extends App with RTApp {
 
   val conf = StartConf("local[3]",
     "dws_order_wide", "ads_trademark_stat_group", Seconds(5))
+
+  //重写此方法,从mysql数据表获取kafka消费偏移量
+  override  def getKafkaOffset(topicName:String,groupId:String):Map[TopicPartition,Long] = {
+    OffsetManagerM.getOffset(topicName, groupId)
+  }
   //启动应用程序
   start(conf) {
     (offsetDStream: DStream[ConsumerRecord[String, String]],
