@@ -8,7 +8,6 @@ import org.apache.spark.streaming.StreamingContext
 import org.apache.spark.streaming.dstream.InputDStream
 import org.apache.spark.streaming.kafka010.{ConsumerStrategies, KafkaUtils, LocationStrategies}
 
-import java.io
 import scala.collection.mutable
 
 /**
@@ -16,8 +15,11 @@ import scala.collection.mutable
  */
 object MyKafkaUtil {
 
-  //kafka消费者配置
-  var kafkaParam: mutable.Map[String, io.Serializable] = collection.mutable.Map(
+  //kafka消费者配置,
+  // 注意: 因为ConsumerStrategies.Subscribe的参数类型要求,
+  //        Map中的类型是String=>Object, 不能是Any或者其它类型.
+  //      否则出现这样的错误: overloaded method value Subscribe with alternatives
+  var kafkaParam: mutable.Map[String, Object] = collection.mutable.Map(
     "bootstrap.servers" -> ApplicationConfig.KAFKA_BOOTSTRAP_SERVERS, //用于初始化链接到集群的地址
     "key.deserializer" -> classOf[StringDeserializer],
     "value.deserializer" -> classOf[StringDeserializer],

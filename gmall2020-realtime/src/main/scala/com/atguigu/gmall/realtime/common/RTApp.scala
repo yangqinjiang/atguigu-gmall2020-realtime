@@ -11,6 +11,7 @@ import org.apache.spark.streaming.kafka010.{HasOffsetRanges, OffsetRange}
 
 trait RTApp extends Logging {
 
+  protected var ssc:StreamingContext = _
   //属性, 因为offsetRanges在DStream.transform周期性被修改,所以要提取到类属性中
   protected var offsetRanges: Array[OffsetRange] = Array.empty[OffsetRange]
 
@@ -30,7 +31,7 @@ trait RTApp extends Logging {
     logWarning( appName + "开始运行了~~")
     val sparkConf: SparkConf = new SparkConf().setMaster(conf.master)
       .setAppName(appName).set("spark.testing.memory", "2147480000")
-    val ssc = new StreamingContext(sparkConf, conf.batchDuration)
+    ssc = new StreamingContext(sparkConf, conf.batchDuration)
     //============消费kafka数据基本实现===================
 
     //从Redis中读取kafka偏移量
