@@ -3,6 +3,7 @@ package com.atguigu.gmall.realtime.dws
 import com.alibaba.fastjson.JSON
 import com.alibaba.fastjson.serializer.SerializeConfig
 import com.atguigu.gmall.realtime.bean.{OrderDetail, OrderInfo, OrderWide}
+import com.atguigu.gmall.realtime.config.ApplicationConfig
 import com.atguigu.gmall.realtime.utils.{MyKafkaSink, MyKafkaUtil, MyRedisUtil, OffsetManagerUtil}
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.apache.kafka.common.TopicPartition
@@ -224,8 +225,8 @@ object OrderWideApp {
           .option("batchsize", "100")
           .option("isolationLevel", "NONE") //设置事务
           .option("numPartitions", "4") //设置并发
-          .option("driver", "ru.yandex.clickhouse.ClickHouseDriver")
-          .jdbc("jdbc:clickhouse://hadoop103:8123/default", "t_order_wide_2020", new Properties())
+          .option("driver", ApplicationConfig.CLICKHOUSE_DRIVER)
+          .jdbc(ApplicationConfig.CLICKHOUSE_URL, "t_order_wide_2020", new Properties())
 
         //将数据写回到 Kafka
         rdd.foreach{orderWide=>

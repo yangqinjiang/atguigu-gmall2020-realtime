@@ -3,6 +3,7 @@ package com.atguigu.gmall.realtime.dim
 import com.alibaba.fastjson.JSON
 import com.atguigu.gmall.realtime.bean.BaseTrademark
 import com.atguigu.gmall.realtime.common.{RTApp, StartConf}
+import com.atguigu.gmall.realtime.config.ApplicationConfig
 import com.atguigu.gmall.realtime.utils.OffsetManagerUtil
 import org.apache.hadoop.conf.Configuration
 import org.apache.kafka.clients.consumer.ConsumerRecord
@@ -38,7 +39,7 @@ object BaseTrademarkApp extends App with RTApp {
             "gmall2020_base_trademark",
             Seq("ID", "TM_NAME"),
             new Configuration,
-            Some("hadoop102,hadoop103,hadoop104:2181")
+            Some(ApplicationConfig.HBASE_HOST)
           )
           //处理完数据, 再保存偏移量
           OffsetManagerUtil.saveOffset(topic, groupId, offsetRanges)

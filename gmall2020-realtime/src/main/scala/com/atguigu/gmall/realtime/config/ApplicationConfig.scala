@@ -5,15 +5,15 @@ import com.typesafe.config.{Config, ConfigFactory}
 object ApplicationConfig {
 
   private val config:Config = ConfigFactory.load("rt-config.properties")
-  /*
+  /**
     Kafka 相关配置信息
   */
   lazy val KAFKA_BOOTSTRAP_SERVERS: String = config.getString("kafka.bootstrap.servers")
   lazy val KAFKA_AUTO_OFFSET_RESET: String = config.getString("kafka.auto.offset.reset")
 
-  /*
-  Redis 数据库
-*/
+  /**
+    Redis 数据库
+  */
   lazy val REDIS_HOST: String = config.getString("redis.host")
   lazy val REDIS_PORT: Int = config.getInt("redis.port")
   lazy val REDIS_DB: Int = config.getInt("redis.db")
@@ -45,4 +45,10 @@ object ApplicationConfig {
    * HBase
    */
   lazy val HBASE_HOST:String = config.getString("hbase.host")
+
+  /**
+   * ClickHouse
+   */
+  lazy val CLICKHOUSE_DRIVER:String = config.getString("clickhouse.driver")
+  lazy val CLICKHOUSE_URL:String = config.getString("clickhouse.url")
 }

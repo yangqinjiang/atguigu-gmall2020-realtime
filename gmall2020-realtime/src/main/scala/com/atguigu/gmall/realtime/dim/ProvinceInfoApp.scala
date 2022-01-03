@@ -3,9 +3,11 @@ package com.atguigu.gmall.realtime.dim
 import com.alibaba.fastjson.JSON
 import com.atguigu.gmall.realtime.bean.ProvinceInfo
 import com.atguigu.gmall.realtime.common.{RTApp, StartConf}
+import com.atguigu.gmall.realtime.config.ApplicationConfig
 import com.atguigu.gmall.realtime.utils.OffsetManagerUtil
 import org.apache.hadoop.conf.Configuration
 import org.apache.kafka.clients.consumer.ConsumerRecord
+import org.apache.spark.internal.Logging
 import org.apache.spark.rdd.RDD
 import org.apache.spark.streaming.Seconds
 import org.apache.spark.streaming.dstream.DStream
@@ -13,7 +15,7 @@ import org.apache.spark.streaming.dstream.DStream
 /**
  * 从kafka中读取省份维度数据,写入到Hbase中
  */
-object ProvinceInfoApp extends App with RTApp {
+object ProvinceInfoApp extends App with RTApp with Logging{
 
   val conf = StartConf("local[3]",
     "ods_base_province", "gmall_province_info_group", Seconds(5))
@@ -35,16 +37,16 @@ object ProvinceInfoApp extends App with RTApp {
             }
           }
 
-          println("saveToPhoenix....")
+          logInfo("saveToPhoenix start....")
           //保存到hbase
           import org.apache.phoenix.spark._
           provinceInfoRDD.saveToPhoenix(
             "gmall2020_province_info",
             Seq("ID", "NAME", "AREA_CODE", "ISO_CODE"),
             new Configuration,
-            Some("hadoop102,hadoop103,hadoop104:2181")
+            Some(ApplicationConfig.HBASE_HOST)
           )
-          println("saveToPhoenix 2....")
+          logInfo("saveToPhoenix finish....")
           //处理完数据, 再保存偏移量
           OffsetManagerUtil.saveOffset(topic, groupId, offsetRanges)
         }

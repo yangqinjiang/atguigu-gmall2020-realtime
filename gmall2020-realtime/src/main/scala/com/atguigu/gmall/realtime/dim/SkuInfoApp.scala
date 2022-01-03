@@ -49,7 +49,7 @@ object SkuInfoApp extends App with RTApp {
           val tmSql = "select id as tm_id,tm_name from gmall2020_base_trademark"
           val tmList: List[JSONObject] = PhoenixUtil.queryList(tmSql)
           //将JSON转换为Map,用ID作为key,方便后续的关联操作
-          //TODO:优化
+          //优化
           val tmMap: Map[String, BaseTrademark] = tmList.map(jsonObj => {
             val o = jsonObj.toJavaObject(classOf[BaseTrademark])
             (o.tm_id,o )
@@ -58,7 +58,7 @@ object SkuInfoApp extends App with RTApp {
           //category3
           val category3Sql = "select id,name from gmall2020_base_category3"
           val category3List: List[JSONObject] = PhoenixUtil.queryList(category3Sql)
-          //TODO:优化
+          //优化
           val category3Map: Map[String, BaseCategory3] = category3List.map(jsonObj => {
             val o = jsonObj.toJavaObject(classOf[BaseCategory3])
             (o.id, o)
@@ -67,7 +67,7 @@ object SkuInfoApp extends App with RTApp {
           //spu
           val spuSql = "select id,spu_name from gmall2020_spu_info"
           val spuList: List[JSONObject] = PhoenixUtil.queryList(spuSql)
-          //TODO:优化
+          //优化
           val spuMap: Map[String, SpuInfo] = spuList.map(jsonObj => {
             val o = jsonObj.toJavaObject(classOf[SpuInfo])
             (o.id, o)

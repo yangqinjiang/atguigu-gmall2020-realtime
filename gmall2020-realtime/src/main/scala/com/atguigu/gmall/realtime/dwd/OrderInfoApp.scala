@@ -4,6 +4,7 @@ import com.alibaba.fastjson.serializer.SerializeConfig
 import com.alibaba.fastjson.{JSON, JSONObject}
 import com.atguigu.gmall.realtime.bean.{OrderInfo, ProvinceInfo, UserInfo, UserStatus}
 import com.atguigu.gmall.realtime.common.{RTApp, StartConf}
+import com.atguigu.gmall.realtime.config.ApplicationConfig
 import com.atguigu.gmall.realtime.utils._
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.apache.spark.broadcast.Broadcast
@@ -261,7 +262,7 @@ object OrderInfoApp extends App with RTApp {
             "USER_STATUS2020",
             Seq("USER_ID", "IF_CONSUMED"), //注意,字段要大写
             new org.apache.hadoop.conf.Configuration,
-            Some("hadoop102,hadoop103,hadoop104:2181")
+            Some(ApplicationConfig.HBASE_HOST)
           )
 
           //--------------3.2 将订单信息写入到 ES 中-----------------
