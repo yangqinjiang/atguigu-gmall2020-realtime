@@ -9,3 +9,8 @@ case class BaseTrademark(
                         tm_id:String,
                         tm_name:String
                         )
+
+object BaseTrademark{
+  //空对象模式,其中属性值均为空值
+  val emptyObj :BaseTrademark = BaseTrademark("0","")
+}

@@ -8,3 +8,8 @@ case class BaseCategory3(
                           name:String ,
                           category2_id:String
                         )
+
+object BaseCategory3{
+  //空对象模式,其中属性值均为空值
+  val emptyObj:BaseCategory3 = BaseCategory3("0","","")
+}

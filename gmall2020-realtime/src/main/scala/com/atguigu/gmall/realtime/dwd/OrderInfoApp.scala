@@ -2,17 +2,14 @@ package com.atguigu.gmall.realtime.dwd
 
 import com.alibaba.fastjson.serializer.SerializeConfig
 import com.alibaba.fastjson.{JSON, JSONObject}
-import com.atguigu.gmall.realtime.bean.{OrderInfo, ProvinceInfo, UserStatus}
+import com.atguigu.gmall.realtime.bean.{OrderInfo, ProvinceInfo, UserInfo, UserStatus}
 import com.atguigu.gmall.realtime.common.{RTApp, StartConf}
 import com.atguigu.gmall.realtime.utils._
 import org.apache.kafka.clients.consumer.ConsumerRecord
-import org.apache.kafka.common.TopicPartition
-import org.apache.spark.SparkConf
 import org.apache.spark.broadcast.Broadcast
 import org.apache.spark.rdd.RDD
-import org.apache.spark.streaming.dstream.{DStream, InputDStream}
-import org.apache.spark.streaming.kafka010.{HasOffsetRanges, OffsetRange}
-import org.apache.spark.streaming.{Seconds, StreamingContext}
+import org.apache.spark.streaming.Seconds
+import org.apache.spark.streaming.dstream.DStream
 
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -165,21 +162,21 @@ object OrderInfoApp extends App with RTApp {
           val provinceJsonList: List[JSONObject] = PhoenixUtil.queryList(sql)
           //将provinceInfoList转换为Map集合
           //[id->{"id":"1","name":"zs","area_code":"1000","iso_code":"CN-JX"}]
-          val provinceJsonMap: Map[Long, JSONObject] = provinceJsonList.map {
+          val provinceJsonMap: Map[Long, ProvinceInfo] = provinceJsonList.map {
             proJsonObj => {
               //因为OrderInfo样例类的province_id是Long,所以id要转为Long
-              //TODO:优化, 下面的proJsonObj,可以用JSON.parseObject(String,classOf[T]) 转为ProvinceInfo样例类
-              (proJsonObj.getLongValue("ID"), proJsonObj)
+              //下面的proJsonObj,可以用JSON.parseObject(String,classOf[T]) 转为ProvinceInfo样例类
+              val info: ProvinceInfo = proJsonObj.toJavaObject(classOf[ProvinceInfo])
+              (info.id.toLong, info)
             }
           }.toMap
           //这里开始, 将订单与省份数据关联起来
           for (orderInfo <- orderInfoList) {
-            val provinceObj: JSONObject = provinceJsonMap.getOrElse(orderInfo.province_id, null)
-            if (null != provinceObj) {
-              orderInfo.province_iso_code = provinceObj.getString("ISO_CODE")
-              orderInfo.province_name = provinceObj.getString("NAME")
-              orderInfo.province_area_code = provinceObj.getString("AREA_CODE")
-            }
+            //空对象模式,其中属性值均为空值
+            val provinceObj: ProvinceInfo = provinceJsonMap.getOrElse(orderInfo.province_id, ProvinceInfo.emptyObj)
+            orderInfo.province_iso_code = provinceObj.iso_code
+            orderInfo.province_name = provinceObj.name
+            orderInfo.province_area_code = provinceObj.area_code
           }
           orderInfoList.toIterator
         }
@@ -198,13 +195,8 @@ object OrderInfoApp extends App with RTApp {
           //封装广播变量
           val provinceInfoMap: Map[String, ProvinceInfo] = provinceInfoList.map {
             jsonObj: JSONObject => {
-              //TODO:优化, 下面的proJsonObj,可以用JSON.parseObject(String,classOf[T]) 转为ProvinceInfo样例类
-              val provinceInfo = ProvinceInfo(
-                jsonObj.getString("ID"),
-                jsonObj.getString("NAME"),
-                jsonObj.getString("AREA_CODE"),
-                jsonObj.getString("ISO_CODE"),
-              )
+              //下面的proJsonObj,可以用JSON.parseObject(String,classOf[T]) 转为ProvinceInfo样例类
+              val provinceInfo = jsonObj.toJavaObject(classOf[ProvinceInfo])
               (provinceInfo.id, provinceInfo)
             }
           }.toMap
@@ -213,12 +205,12 @@ object OrderInfoApp extends App with RTApp {
 
           val orderInfoWithProvinceRDD: RDD[OrderInfo] = rdd.map {
             orderInfo: OrderInfo => {
-              val provinceInfo: ProvinceInfo = provinceInfoBC.value.getOrElse(orderInfo.province_id.toString, null)
-              if (null != provinceInfo) {
-                orderInfo.province_name = provinceInfo.name
-                orderInfo.province_area_code = provinceInfo.area_code
-                orderInfo.province_iso_code = provinceInfo.iso_code
-              }
+              //空对象模式,其中属性值均为空值
+              val provinceInfo: ProvinceInfo = provinceInfoBC.value.getOrElse(orderInfo.province_id.toString, ProvinceInfo.emptyObj)
+
+              orderInfo.province_name = provinceInfo.name
+              orderInfo.province_area_code = provinceInfo.area_code
+              orderInfo.province_iso_code = provinceInfo.iso_code
               orderInfo
             }
           }
@@ -239,14 +231,15 @@ object OrderInfoApp extends App with RTApp {
           var sql: String = s"select id,user_level,birthday,gender,age_group,gender_name from gmall2020_user_info where id in ('${userIdList.mkString("','")}')"
           val userJsonList: List[JSONObject] = PhoenixUtil.queryList(sql)
           //getLongValue ,不会返回null值
-          val userJsonMap: Map[Long, JSONObject] = userJsonList.map(userJsonObj => (userJsonObj.getLongValue("ID"), userJsonObj)).toMap
+          val userJsonMap: Map[String, UserInfo] = userJsonList.map(userJsonObj => {
+            val userInfo:UserInfo = userJsonObj.toJavaObject(classOf[UserInfo])
+            (userInfo.id, userInfo)
+          }).toMap
           for (orderInfo <- orderInfoList) {
-
-            val userJsonObj: JSONObject = userJsonMap.getOrElse(orderInfo.user_id, null)
-            if (null != userJsonObj) {
-              orderInfo.user_gender = userJsonObj.getString("GENDER_NAME")
-              orderInfo.user_age_group = userJsonObj.getString("AGE_GROUP")
-            }
+            //UserInfo.emptyObj 是空对象模式,其中属性值均为空值
+            val userInfo: UserInfo = userJsonMap.getOrElse(orderInfo.user_id.toString, UserInfo.emptyObj)
+            orderInfo.user_gender = userInfo.gender_name
+            orderInfo.user_age_group = userInfo.age_group
           }
           orderInfoList.toIterator
         }

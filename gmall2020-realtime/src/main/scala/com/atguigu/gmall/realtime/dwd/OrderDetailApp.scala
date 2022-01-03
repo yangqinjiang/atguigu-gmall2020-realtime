@@ -2,7 +2,7 @@ package com.atguigu.gmall.realtime.dwd
 
 import com.alibaba.fastjson.serializer.SerializeConfig
 import com.alibaba.fastjson.{JSON, JSONObject}
-import com.atguigu.gmall.realtime.bean.OrderDetail
+import com.atguigu.gmall.realtime.bean.{OrderDetail, SkuInfo}
 import com.atguigu.gmall.realtime.common.{RTApp, StartConf}
 import com.atguigu.gmall.realtime.utils.{MyKafkaSink, OffsetManagerUtil, PhoenixUtil}
 import org.apache.kafka.clients.consumer.ConsumerRecord
@@ -39,16 +39,19 @@ object OrderDetailApp extends App with RTApp {
             //从hbase查询指定的skuId
             val sql = s"select id,tm_id,spu_id,category3_id,tm_name,spu_name,category3_name from gmall2020_sku_info where id in ('${skuIdList.mkString("','")}')"
             val skuJsonObjList: List[JSONObject] = PhoenixUtil.queryList(sql)
-            val skuJsonObjMap: Map[Long, JSONObject] = skuJsonObjList.map(skuJsonObj => (skuJsonObj.getLongValue("ID"), skuJsonObj)).toMap
+            val skuJsonObjMap: Map[Long, SkuInfo] = skuJsonObjList.map(skuJsonObj => {
+              val skuInfo = skuJsonObj.toJavaObject(classOf[SkuInfo])
+              (skuJsonObj.getLongValue("ID"), skuInfo)
+            }).toMap
             for (orderDetail <- orderDetailList) {
-              val skuJsonObj: JSONObject = skuJsonObjMap.getOrElse(orderDetail.sku_id, null)
+              val skuJsonObj: SkuInfo = skuJsonObjMap.getOrElse(orderDetail.sku_id, SkuInfo.emptyObj)
               //关联orderDetail与sku的数据
-              orderDetail.spu_id = skuJsonObj.getLong("SPU_ID")
-              orderDetail.spu_name = skuJsonObj.getString("SPU_NAME")
-              orderDetail.tm_id = skuJsonObj.getLong("TM_ID")
-              orderDetail.tm_name = skuJsonObj.getString("TM_NAME")
-              orderDetail.category3_id = skuJsonObj.getLong("CATEGORY3_ID")
-              orderDetail.category3_name = skuJsonObj.getString("CATEGORY3_NAME")
+              orderDetail.spu_id = skuJsonObj.spu_id.toLong
+              orderDetail.spu_name = skuJsonObj.spu_name
+              orderDetail.tm_id = skuJsonObj.tm_id.toLong
+              orderDetail.tm_name = skuJsonObj.tm_name
+              orderDetail.category3_id = skuJsonObj.category3_id.toLong
+              orderDetail.category3_name = skuJsonObj.category3_name
             }
           }
           orderDetailList.toIterator

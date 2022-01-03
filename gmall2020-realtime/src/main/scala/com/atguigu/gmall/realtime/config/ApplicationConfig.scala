@@ -40,4 +40,9 @@ object ApplicationConfig {
    */
   lazy val PHOENIX_DRIVER:String = config.getString("phoenix.driver")
   lazy val PHOENIX_CONN:String = config.getString("phoenix.conn")
+
+  /**
+   * HBase
+   */
+  lazy val HBASE_HOST:String = config.getString("hbase.host")
 }
