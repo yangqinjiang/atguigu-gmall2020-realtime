@@ -9,7 +9,6 @@ import org.apache.hadoop.conf.Configuration
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.apache.spark.internal.Logging
 import org.apache.spark.rdd.RDD
-import org.apache.spark.streaming.Seconds
 import org.apache.spark.streaming.dstream.DStream
 
 /**
@@ -17,8 +16,7 @@ import org.apache.spark.streaming.dstream.DStream
  */
 object ProvinceInfoApp extends App with RTApp with Logging{
 
-  val conf = StartConf("local[3]",
-    "ods_base_province", "gmall_province_info_group", Seconds(5))
+  val conf = StartConf("ods_base_province", "gmall_province_info_group")
 
   //启动应用程序
   start(conf) {

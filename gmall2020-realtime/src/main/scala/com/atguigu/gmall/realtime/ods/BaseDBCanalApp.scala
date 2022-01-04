@@ -4,13 +4,11 @@ import com.alibaba.fastjson.{JSON, JSONArray, JSONObject}
 import com.atguigu.gmall.realtime.common.{RTApp, StartConf}
 import com.atguigu.gmall.realtime.utils.{MyKafkaSink, OffsetManagerUtil}
 import org.apache.kafka.clients.consumer.ConsumerRecord
-import org.apache.spark.streaming.Seconds
 import org.apache.spark.streaming.dstream.DStream
 
 //基于Canal从Kafka中读取业务数据, 进行分流
 object BaseDBCanalApp extends App with RTApp {
-  val conf = StartConf("local[3]",
-    "gmall2020_db_c", "base_db_canal_group", Seconds(5))
+  val conf = StartConf("gmall2020_db_c", "base_db_canal_group")
 
   //启动应用程序
   start(conf) {

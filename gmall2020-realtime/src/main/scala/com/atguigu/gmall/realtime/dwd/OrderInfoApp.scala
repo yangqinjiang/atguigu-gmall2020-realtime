@@ -19,8 +19,7 @@ import java.util.Date
  * 判断是否为首单用户实现
  */
 object OrderInfoApp extends App with RTApp {
-  val conf = StartConf("local[3]",
-    "ods_order_info", "order_info_group", Seconds(5))
+  val conf = StartConf("ods_order_info", "order_info_group")
   //启动应用程序
   start(conf) {
     (offsetDStream: DStream[ConsumerRecord[String, String]],

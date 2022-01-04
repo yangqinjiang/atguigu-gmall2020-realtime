@@ -1,11 +1,12 @@
 package com.atguigu.gmall.realtime.common
 
+import com.atguigu.gmall.realtime.config.ApplicationConfig
 import com.atguigu.gmall.realtime.utils.{MyKafkaUtil, OffsetManagerUtil, StreamingUtils}
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.apache.kafka.common.TopicPartition
 import org.apache.spark.SparkConf
 import org.apache.spark.internal.Logging
-import org.apache.spark.streaming.StreamingContext
+import org.apache.spark.streaming.{Duration, StreamingContext}
 import org.apache.spark.streaming.dstream.{DStream, InputDStream}
 import org.apache.spark.streaming.kafka010.{HasOffsetRanges, OffsetRange}
 
@@ -28,10 +29,18 @@ trait RTApp extends Logging {
   def start(conf:StartConf)(offsetDStreamOp: (DStream[ConsumerRecord[String, String]], String, String) => Unit): Unit = {
 
     val appName = this.getClass.getSimpleName.stripSuffix("$")
-    logWarning( appName + "开始运行了~~")
-    val sparkConf: SparkConf = new SparkConf().setMaster(conf.master)
-      .setAppName(appName).set("spark.testing.memory", "2147480000")
-    ssc = new StreamingContext(sparkConf, conf.batchDuration)
+    logInfo( appName + "开始运行了~~")
+    val sparkConf: SparkConf = new SparkConf()
+      .setAppName(appName)
+      .set("spark.streaming.stopGracefullyOnShutdown", "true") // 优雅停止spark服务
+    if (ApplicationConfig.APP_LOCAL_MODE) {
+      logWarning("运行模式为 本地")
+      sparkConf.setMaster(ApplicationConfig.APP_SPARK_MASTER)
+        //设置每批次消费数据最大数据量, 生成环境使用命令行设置
+        .set("spark.streaming.kafka.maxRatePerPartition", "10000")
+        .set("spark.testing.memory", "2147480000")
+    }
+    ssc = new StreamingContext(sparkConf, Duration(conf.seconds))
     //============消费kafka数据基本实现===================
 
     //从Redis中读取kafka偏移量

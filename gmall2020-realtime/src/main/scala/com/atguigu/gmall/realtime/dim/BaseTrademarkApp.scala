@@ -7,15 +7,13 @@ import com.atguigu.gmall.realtime.config.ApplicationConfig
 import com.atguigu.gmall.realtime.utils.OffsetManagerUtil
 import org.apache.hadoop.conf.Configuration
 import org.apache.kafka.clients.consumer.ConsumerRecord
-import org.apache.spark.streaming.Seconds
 import org.apache.spark.streaming.dstream.DStream
 
 /**
  * 读取商品品牌维度数据到Hbase
  */
 object BaseTrademarkApp extends App with RTApp {
-  val conf = StartConf("local[3]",
-    "ods_base_trademark", "gmall_base_trademark_group", Seconds(5))
+  val conf = StartConf("ods_base_trademark", "gmall_base_trademark_group")
 
   //启动应用程序
   start(conf) {

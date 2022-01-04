@@ -11,8 +11,7 @@ import org.apache.spark.streaming.Seconds
 import org.apache.spark.streaming.dstream.DStream
 
 object OrderDetailApp extends App with RTApp {
-  val conf = StartConf("local[3]",
-    "ods_order_detail", "order_detail_group", Seconds(5))
+  val conf = StartConf("ods_order_detail", "order_detail_group")
   //启动应用程序
   start(conf) {
     (offsetDStream: DStream[ConsumerRecord[String, String]],

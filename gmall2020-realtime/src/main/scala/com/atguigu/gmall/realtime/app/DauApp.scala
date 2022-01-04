@@ -6,7 +6,6 @@ import com.atguigu.gmall.realtime.common.{RTApp, StartConf}
 import com.atguigu.gmall.realtime.utils.{MyESUtil, MyRedisUtil, OffsetManagerUtil}
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.apache.spark.rdd.RDD
-import org.apache.spark.streaming.Seconds
 import org.apache.spark.streaming.dstream.DStream
 import redis.clients.jedis.Jedis
 
@@ -19,8 +18,7 @@ import scala.collection.mutable.ListBuffer
  * DailyActiveUser 日活用户统计业务类
  */
 object DauApp extends App with RTApp {
-  val conf = StartConf("local[3]",
-    "gmall_start_0523", "gmall_dau_group", Seconds(5))
+  val conf = StartConf("gmall_start_0523", "gmall_dau_group")
   //启动应用程序
   start(conf) {
     (offsetDStream: DStream[ConsumerRecord[String, String]],

@@ -16,8 +16,7 @@ import org.apache.spark.streaming.dstream.DStream
  * 读取商品维度数据,并关联品牌,分类,spu, 保存到Hbase
  */
 object SkuInfoApp extends App with RTApp {
-  val conf = StartConf("local[3]",
-    "ods_sku_info", "gmall_sku_info_group", Seconds(5))
+  val conf = StartConf("ods_sku_info", "gmall_sku_info_group")
 
   //启动应用程序
   start(conf) {

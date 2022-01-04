@@ -51,4 +51,10 @@ object ApplicationConfig {
    */
   lazy val CLICKHOUSE_DRIVER:String = config.getString("clickhouse.driver")
   lazy val CLICKHOUSE_URL:String = config.getString("clickhouse.url")
+
+  /**
+   * 运行模式,开发测试为本地模式,测试生产通过--master传递
+   */
+  lazy val APP_LOCAL_MODE:Boolean = config.getBoolean("app.is.local")
+  lazy val APP_SPARK_MASTER:String = config.getString("app.spark.master")
 }

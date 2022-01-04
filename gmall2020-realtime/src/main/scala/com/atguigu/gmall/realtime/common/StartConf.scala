@@ -1,15 +1,11 @@
 package com.atguigu.gmall.realtime.common
 
-import org.apache.spark.streaming.Duration
-
 /**
- * 启动参数,
- * @param master spark master
+ * 启动参数
  * @param topic  kafka 主题
  * @param groupId kafka 消费组
- * @param batchDuration spark Streaming 的周期时长
+ * @param seconds spark Streaming 的周期时长,默认为5s
  */
-case class StartConf(val master: String = "local[*]"
-                     , val topic: String = "RTTopic"
+case class StartConf(val topic: String = "RTTopic"
                      , val groupId: String = "RTGroupId",
-                     val batchDuration: Duration)
+                     val seconds: Long = 5)
