@@ -32,15 +32,19 @@ object TrademarkStatApp extends App with RTApp with Logging{
     (offsetDStream: DStream[ConsumerRecord[String, String]],
      topic: String, groupId: String) => {
       //提取数据
-      val orderWideDstream: DStream[OrderWide] = offsetDStream.map {
-        record => {
-          val jsonString: String = record.value()
-          //订单处理 脱敏 换成特殊字符 直接去掉 转换成更方便操作的专用样例类
-          val orderWide: OrderWide = JSON.parseObject(jsonString,
-            classOf[OrderWide])
-          orderWide
-        }
-      }
+      //订单处理 脱敏 换成特殊字符 直接去掉 转换成更方便操作的专用样例类
+//      val orderWideDstream: DStream[OrderWide] = offsetDStream.map {
+//        record => {
+//          val jsonString: String = record.value()
+//          //订单处理 脱敏 换成特殊字符 直接去掉 转换成更方便操作的专用样例类
+//          val orderWide: OrderWide = JSON.parseObject(jsonString,
+//            classOf[OrderWide])
+//          orderWide
+//        }
+//      }
+      //等同于上面的代码
+      import com.atguigu.gmall.realtime.utils.MyImplicit.transformToObj
+      val orderWideDstream: DStream[OrderWide] = offsetDStream
       // 聚合
       val trademarkAmountDstream: DStream[(String, Double)] =
         orderWideDstream.map {

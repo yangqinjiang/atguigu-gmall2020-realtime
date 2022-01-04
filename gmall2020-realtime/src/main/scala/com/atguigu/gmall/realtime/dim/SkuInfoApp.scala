@@ -1,6 +1,6 @@
 package com.atguigu.gmall.realtime.dim
 
-import com.alibaba.fastjson.{JSON, JSONObject}
+import com.alibaba.fastjson.JSONObject
 import com.atguigu.gmall.realtime.bean.{BaseCategory3, BaseTrademark, SkuInfo, SpuInfo}
 import com.atguigu.gmall.realtime.common.{RTApp, StartConf}
 import com.atguigu.gmall.realtime.config.ApplicationConfig
@@ -9,7 +9,6 @@ import org.apache.hadoop.conf.Configuration
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.apache.spark.broadcast.Broadcast
 import org.apache.spark.rdd.RDD
-import org.apache.spark.streaming.Seconds
 import org.apache.spark.streaming.dstream.DStream
 
 /**
@@ -24,13 +23,9 @@ object SkuInfoApp extends App with RTApp {
      topic: String, groupId: String) => {
 
       //转换结构
-      val objectDStream: DStream[SkuInfo] = offsetDStream.map {
-        record => {
-          val jsonStr: String = record.value()
-          val obj: SkuInfo = JSON.parseObject(jsonStr, classOf[SkuInfo])
-          obj
-        }
-      }
+      import com.atguigu.gmall.realtime.utils.MyImplicit.transformToObj
+      val objectDStream: DStream[SkuInfo] = offsetDStream
+
 
       //TODO: 商品和品牌,分类,Spu维度表进行关联, 这是退化维度, 只是为了方便订单明细与维度表关联时, 高效些
       //

@@ -1,6 +1,5 @@
 package com.atguigu.gmall.realtime.dim
 
-import com.alibaba.fastjson.JSON
 import com.atguigu.gmall.realtime.bean.UserInfo
 import com.atguigu.gmall.realtime.common.{RTApp, StartConf}
 import com.atguigu.gmall.realtime.config.ApplicationConfig
@@ -23,10 +22,13 @@ object UserInfoApp extends App with RTApp {
   start(conf) {
     (offsetDStream: DStream[ConsumerRecord[String, String]],
      topic: String, groupId: String) => {
-      val userInfoDStream: DStream[UserInfo] = offsetDStream.map {
-        record: ConsumerRecord[String, String] => { //record是从kafka读取出来 的
-          val userInfoJsonStr: String = record.value()
-          val userInfo: UserInfo = JSON.parseObject(userInfoJsonStr, classOf[UserInfo])
+
+      import com.atguigu.gmall.realtime.utils.MyImplicit.transformToObj
+      val userInfoDStream: DStream[UserInfo] = offsetDStream
+      //record是从kafka读取出来 的
+
+      val userInfoDStream2: DStream[UserInfo] = userInfoDStream.map {
+        userInfo: UserInfo => {
           //把生日转成年龄
           val formattor = new SimpleDateFormat("yyyy-MM-dd")
           val date: Date = formattor.parse(userInfo.birthday)
@@ -49,7 +51,7 @@ object UserInfoApp extends App with RTApp {
         }
       }
       //写入到hbase中
-      userInfoDStream.foreachRDD {
+      userInfoDStream2.foreachRDD {
         userInfoRDD: RDD[UserInfo] => {
 
           //保存到hbase

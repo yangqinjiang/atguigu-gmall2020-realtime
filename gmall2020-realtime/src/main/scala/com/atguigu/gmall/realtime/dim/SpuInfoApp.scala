@@ -1,6 +1,5 @@
 package com.atguigu.gmall.realtime.dim
 
-import com.alibaba.fastjson.JSON
 import com.atguigu.gmall.realtime.bean.SpuInfo
 import com.atguigu.gmall.realtime.common.{RTApp, StartConf}
 import com.atguigu.gmall.realtime.config.ApplicationConfig
@@ -21,13 +20,8 @@ object SpuInfoApp extends App with RTApp {
      topic: String, groupId: String) => {
 
       //转换结构
-      val objectDStream: DStream[SpuInfo] = offsetDStream.map {
-        record => {
-          val jsonStr: String = record.value()
-          val obj: SpuInfo = JSON.parseObject(jsonStr, classOf[SpuInfo])
-          obj
-        }
-      }
+      import com.atguigu.gmall.realtime.utils.MyImplicit.transformToObj
+      val objectDStream: DStream[SpuInfo] = offsetDStream
 
       //保存到hbase
       import org.apache.phoenix.spark._

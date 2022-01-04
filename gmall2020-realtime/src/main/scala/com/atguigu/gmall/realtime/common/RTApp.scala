@@ -6,30 +6,33 @@ import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.apache.kafka.common.TopicPartition
 import org.apache.spark.SparkConf
 import org.apache.spark.internal.Logging
-import org.apache.spark.streaming.{Duration, StreamingContext}
 import org.apache.spark.streaming.dstream.{DStream, InputDStream}
 import org.apache.spark.streaming.kafka010.{HasOffsetRanges, OffsetRange}
+import org.apache.spark.streaming.{Seconds, StreamingContext}
+
+import scala.language.implicitConversions //引入反射
 
 trait RTApp extends Logging {
 
-  protected var ssc:StreamingContext = _
+  protected var ssc: StreamingContext = _
   //属性, 因为offsetRanges在DStream.transform周期性被修改,所以要提取到类属性中
   protected var offsetRanges: Array[OffsetRange] = Array.empty[OffsetRange]
 
   /**
    * 获取kafka的消费偏移量
+   *
    * @param topicName 主题
-   * @param groupId 消费者组
+   * @param groupId   消费者组
    * @return
    */
-  def getKafkaOffset(topicName:String,groupId:String):Map[TopicPartition,Long] = {
+  def getKafkaOffset(topicName: String, groupId: String): Map[TopicPartition, Long] = {
     OffsetManagerUtil.getOffset(topicName, groupId)
   }
 
-  def start(conf:StartConf)(offsetDStreamOp: (DStream[ConsumerRecord[String, String]], String, String) => Unit): Unit = {
+  def start(conf: StartConf)(offsetDStreamOp: (DStream[ConsumerRecord[String, String]], String, String) => Unit): Unit = {
 
     val appName = this.getClass.getSimpleName.stripSuffix("$")
-    logInfo( appName + "开始运行了~~")
+    logInfo(appName + "开始运行了~~")
     val sparkConf: SparkConf = new SparkConf()
       .setAppName(appName)
       .set("spark.streaming.stopGracefullyOnShutdown", "true") // 优雅停止spark服务
@@ -40,7 +43,7 @@ trait RTApp extends Logging {
         .set("spark.streaming.kafka.maxRatePerPartition", "10000")
         .set("spark.testing.memory", "2147480000")
     }
-    ssc = new StreamingContext(sparkConf, Duration(conf.seconds))
+    ssc = new StreamingContext(sparkConf, Seconds(conf.seconds))
     //============消费kafka数据基本实现===================
 
     //从Redis中读取kafka偏移量
@@ -77,6 +80,6 @@ trait RTApp extends Logging {
     //通过扫描监控文件，优雅的关闭停止StreamingContext流式应用
     // 设置参数spark.streaming.stopGracefullyOnShutdown为true，优雅的关闭
     // 自动适应本地文件系统或者Hadoop的DFS系统,
-    StreamingUtils.stopStreaming(ssc, "gmall2020-realtime/datas/stop/"+appName)
+    StreamingUtils.stopStreaming(ssc, "gmall2020-realtime/datas/stop/" + appName)
   }
 }

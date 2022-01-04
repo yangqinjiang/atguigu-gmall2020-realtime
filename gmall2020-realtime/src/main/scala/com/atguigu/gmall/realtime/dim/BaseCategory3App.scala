@@ -1,12 +1,12 @@
 package com.atguigu.gmall.realtime.dim
 
-import com.alibaba.fastjson.JSON
 import com.atguigu.gmall.realtime.bean.BaseCategory3
 import com.atguigu.gmall.realtime.common.{RTApp, StartConf}
 import com.atguigu.gmall.realtime.config.ApplicationConfig
 import com.atguigu.gmall.realtime.utils.OffsetManagerUtil
 import org.apache.hadoop.conf.Configuration
 import org.apache.kafka.clients.consumer.ConsumerRecord
+import org.apache.spark.rdd.RDD
 import org.apache.spark.streaming.dstream.DStream
 
 /**
@@ -21,19 +21,14 @@ object BaseCategory3App extends App with RTApp {
      topic: String, groupId: String) => {
 
       //转换结构
-      val objectDStream: DStream[BaseCategory3] = offsetDStream.map {
-        record => {
-          val jsonStr: String = record.value()
-
-          val obj: BaseCategory3 = JSON.parseObject(jsonStr, classOf[BaseCategory3])
-          obj
-        }
-      }
+      //隐式转换
+      import com.atguigu.gmall.realtime.utils.MyImplicit.transformToObj
+      val objectDStream: DStream[BaseCategory3] = offsetDStream
 
       //保存到hbase
       import org.apache.phoenix.spark._
       objectDStream.foreachRDD {
-        rdd => {
+        rdd: RDD[BaseCategory3] => {
           rdd.saveToPhoenix(
             "gmall2020_base_category3",
             Seq("ID", "NAME", "CATEGORY2_ID"),

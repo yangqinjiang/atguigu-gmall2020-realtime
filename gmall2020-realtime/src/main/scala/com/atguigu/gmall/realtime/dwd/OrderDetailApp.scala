@@ -7,7 +7,6 @@ import com.atguigu.gmall.realtime.common.{RTApp, StartConf}
 import com.atguigu.gmall.realtime.utils.{MyKafkaSink, OffsetManagerUtil, PhoenixUtil}
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.apache.spark.rdd.RDD
-import org.apache.spark.streaming.Seconds
 import org.apache.spark.streaming.dstream.DStream
 
 object OrderDetailApp extends App with RTApp {
@@ -17,14 +16,10 @@ object OrderDetailApp extends App with RTApp {
     (offsetDStream: DStream[ConsumerRecord[String, String]],
      topic: String, groupId: String) => {
       //提取数据
-      val orderDetailDStream: DStream[OrderDetail] = offsetDStream.map {
-        record => {
-          val jsonString: String = record.value()
-          //订单处理,转换成更方便操作的专用样例类
-          val orderDetail: OrderDetail = JSON.parseObject(jsonString, classOf[OrderDetail])
-          orderDetail
-        }
-      }
+      //转换结构
+      //隐式转换
+      import com.atguigu.gmall.realtime.utils.MyImplicit.transformToObj
+      val orderDetailDStream: DStream[OrderDetail] = offsetDStream
 
       //    orderDetailDStream.print(1000)
 

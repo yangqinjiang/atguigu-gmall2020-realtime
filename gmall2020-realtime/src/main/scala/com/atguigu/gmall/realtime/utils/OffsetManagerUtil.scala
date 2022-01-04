@@ -67,14 +67,13 @@ Map[TopicPartition,Long]
         logWarning("保存分区: "+partition+":"+offset.fromOffset+"---->"+offset.untilOffset)
       }
     }
-    logWarning("-------------")
-    //拼接Redis中存储偏移量的key
-    val offsetKey = "offset:" + topicName + ":" + groupId
-
+    //TODO: 如果数据没有更新,则不执行下面的操作
     //如果需要保存的偏移量不为空, 执行保存操作
     if (offsetMap!= null&&offsetMap.size() > 0){
       //获取Redis客户端
       val jedis: Jedis = MyRedisUtil.getJedisClient
+      //拼接Redis中存储偏移量的key
+      val offsetKey = "offset:" + topicName + ":" + groupId
       //保存到redis中
       jedis.hmset(offsetKey,offsetMap)
       //关闭客户端

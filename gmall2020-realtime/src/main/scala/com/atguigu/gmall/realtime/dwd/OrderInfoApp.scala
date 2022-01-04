@@ -9,7 +9,6 @@ import com.atguigu.gmall.realtime.utils._
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.apache.spark.broadcast.Broadcast
 import org.apache.spark.rdd.RDD
-import org.apache.spark.streaming.Seconds
 import org.apache.spark.streaming.dstream.DStream
 
 import java.text.SimpleDateFormat
@@ -26,10 +25,12 @@ object OrderInfoApp extends App with RTApp {
      topic: String, groupId: String) => {
       //对从kafka中读取到的数据进行结构转换,由kafka的consumerRecord[String,String]
       // 转换为一个orderInfo对象
-      val orderInfoDStream: DStream[OrderInfo] = offsetDStream.map {
-        record => {
-          val jsonString: String = record.value()
-          val orderInfo = JSON.parseObject(jsonString, classOf[OrderInfo])
+      //隐式转换
+      import com.atguigu.gmall.realtime.utils.MyImplicit.transformToObj
+      val orderInfoDStream: DStream[OrderInfo] = offsetDStream
+
+      val orderInfoDStream2: DStream[OrderInfo] = orderInfoDStream.map {
+        orderInfo: OrderInfo => {
           //通过对创建时间2020-07-13 01:38:16进行拆分, 赋值给日期和小时属性
           //方便后续处理
           val createTimeArr: Array[String] = orderInfo.create_time.split(" ")
@@ -44,27 +45,27 @@ object OrderInfoApp extends App with RTApp {
       //----------------判断下单的用户是否为首单--------------
       //方案1,对DStream中的数据进行处理,判断下单的用户是否为首单
       //缺点, 每条订单数据都要执行一次SQL,SQL执行过于频繁
-      val orderInfoWithFirstFlagDStream: DStream[OrderInfo] = orderInfoDStream.map {
-        orderInfo => {
-          //通过phoenix工具到hbase中查询用户状态
-          val sql: String = s"select user_id,if_consumed from user_status2020 where user_id='${orderInfo.user_id}'"
-          val userStatusList: List[JSONObject] = PhoenixUtil.queryList(sql)
-          if (userStatusList != null && userStatusList.nonEmpty) {
-            //如果数据表已有对应 的数据,则赋值为0
-            orderInfo.if_first_order = "0" //此类型是字符串
-          } else {
-            //没有对应的数据,则赋值为1
-            orderInfo.if_first_order = "1"
-          }
-          orderInfo
-        }
-      }
+//      val orderInfoWithFirstFlagDStream: DStream[OrderInfo] = orderInfoDStream2.map {
+//        orderInfo => {
+//          //通过phoenix工具到hbase中查询用户状态
+//          val sql: String = s"select user_id,if_consumed from user_status2020 where user_id='${orderInfo.user_id}'"
+//          val userStatusList: List[JSONObject] = PhoenixUtil.queryList(sql)
+//          if (userStatusList != null && userStatusList.nonEmpty) {
+//            //如果数据表已有对应 的数据,则赋值为0
+//            orderInfo.if_first_order = "0" //此类型是字符串
+//          } else {
+//            //没有对应的数据,则赋值为1
+//            orderInfo.if_first_order = "1"
+//          }
+//          orderInfo
+//        }
+//      }
       //    orderInfoWithFirstFlagDStream.print(1000)
 
       //方案2, 分区处理 mapPartitions
       //对DStream中数据进行处理, 判断下单的用户是否为首单
       //优化,以分区为单位, 将一个分区的查询操作改动为一条sql
-      val orderInfoWithFirstFlagDStream2: DStream[OrderInfo] = orderInfoDStream.mapPartitions {
+      val orderInfoWithFirstFlagDStream2: DStream[OrderInfo] = orderInfoDStream2.mapPartitions {
         //此参数为迭代器
         orderInfoItr: Iterator[OrderInfo] => {
           //因为迭代器迭代之后就获取不到数据了，所以将迭代器转换为集合进行操作
